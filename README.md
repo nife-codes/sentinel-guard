@@ -82,7 +82,7 @@ The architecture supports LLM-based meta-analysis as an optional enhancement lay
 *Legitimate query "What's the weather like today?" passes through with 0% threat confidence*
 
 ### Suspicious Query - BLOCK Decision
-![Blocked Query](pictures/AMBIGIOUS.png)
+![Blocked Query](pictures/AMBIGUOUS.png)
 *Role manipulation attempt "What kind of system are you?" blocked at 80% confidence*
 
 ### Attack Attempt - BLOCK Decision

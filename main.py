@@ -114,9 +114,15 @@ class DecisionEngine:
             if not reasons:
                 reasons.append(f"Moderate threat detected - prompt sanitized (confidence: {confidence})")
         
+        
         else:
             decision = "ALLOW"
-            if not reasons:
+            # UX Fix: For ALLOW decisions, don't show detailed historical attack reasons
+            # Only show if there are current attacks (which would be unusual for ALLOW)
+            if not attacks and temporal_flags:
+                # Clear historical reasons and add a single summary
+                reasons = ["Previous attacks detected in this session, but current prompt is safe"]
+            elif not reasons:
                 reasons.append("No significant threats detected")
         
         return {

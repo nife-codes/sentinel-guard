@@ -6,6 +6,7 @@ Uses Google Gemini 2.0 Flash to analyze ambiguous prompts and provide explainabl
 import os
 from typing import Optional, Dict, List
 import google.generativeai as genai
+from dotenv import load_dotenv  # Add this import
 
 
 class LLMAnalyzer:
@@ -18,6 +19,9 @@ class LLMAnalyzer:
         Args:
             api_key: Google API key (defaults to GEMINI_API_KEY env var)
         """
+        # Load .env file if not already loaded
+        load_dotenv()
+        
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found in environment or constructor")

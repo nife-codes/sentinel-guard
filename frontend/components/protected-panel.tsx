@@ -78,16 +78,32 @@ function ResultDisplay({ result }: { result: SentinelResult }) {
         <ul className="flex flex-col gap-1.5">
           {result.reasons.map((reason) => (
             <li key={reason} className="flex items-start gap-2 text-xs text-foreground leading-relaxed">
-              <span className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${
-                result.decision === "BLOCK" ? "bg-status-block" :
-                result.decision === "SANITIZE" ? "bg-status-sanitize" :
-                "bg-status-allow"
-              }`} />
+              <span className={`mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${result.decision === "BLOCK" ? "bg-status-block" :
+                  result.decision === "SANITIZE" ? "bg-status-sanitize" :
+                    "bg-status-allow"
+                }`} />
               {reason}
             </li>
           ))}
         </ul>
       </div>
+
+      {/* Attacks Detected */}
+      {result.attacksDetected && result.attacksDetected.length > 0 && (
+        <div className="rounded-md border border-border bg-secondary/50 p-3">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Attack Types Detected</p>
+          <div className="flex flex-wrap gap-1.5">
+            {result.attacksDetected.map((attack) => (
+              <span
+                key={attack}
+                className="inline-flex items-center rounded border border-status-block/30 bg-status-block/10 px-2 py-0.5 text-[10px] font-medium text-status-block"
+              >
+                {attack.replace(/_/g, ' ').toUpperCase()}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Sanitized prompt */}
       {result.decision === "SANITIZE" && result.sanitizedPrompt && (
@@ -110,8 +126,8 @@ function ConfidenceBar({ value, decision }: { value: number; decision: Decision 
   const color = decision === "ALLOW"
     ? "bg-status-allow"
     : decision === "SANITIZE"
-    ? "bg-status-sanitize"
-    : "bg-status-block"
+      ? "bg-status-sanitize"
+      : "bg-status-block"
 
   return (
     <div className="h-1.5 w-16 overflow-hidden rounded-full bg-secondary">

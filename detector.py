@@ -117,16 +117,13 @@ class AttackDetector:
             if pattern.search(prompt):
                 matches.append(f"regex:{pattern.pattern[:50]}")
         
-        # DEBUG: Print what's being matched
-        print(f"\nDEBUG system_override: prompt='{prompt}'")
-        normalized = self.fuzzy_matcher.normalize_text(prompt)
-        print(f"DEBUG normalized: '{normalized}'")
+        normalized = self._normalize_text(prompt)
         
         # Fuzzy matching
         fuzzy_detected, fuzzy_matches = self.fuzzy_matcher.fuzzy_match(
             prompt, self.fuzzy_system_override
         )
-        print(f"DEBUG fuzzy result: detected={fuzzy_detected}, matches={fuzzy_matches}")
+
         
         if fuzzy_detected:
             matches.append(f"fuzzy:{','.join(fuzzy_matches)}")
@@ -142,16 +139,13 @@ class AttackDetector:
             if pattern.search(prompt):
                 matches.append(f"regex:{pattern.pattern[:50]}")
         
-        # DEBUG
-        print(f"\nDEBUG role_manipulation: prompt='{prompt}'")
-        normalized = self.fuzzy_matcher.normalize_text(prompt)
-        print(f"DEBUG normalized: '{normalized}'")
+        normalized = self._normalize_text(prompt)
         
         # Fuzzy matching
         fuzzy_detected, fuzzy_matches = self.fuzzy_matcher.fuzzy_match(
             prompt, self.fuzzy_role_manipulation
         )
-        print(f"DEBUG fuzzy result: detected={fuzzy_detected}, matches={fuzzy_matches}")
+
         
         if fuzzy_detected:
             matches.append(f"fuzzy:{','.join(fuzzy_matches)}")
@@ -191,17 +185,13 @@ class AttackDetector:
             if pattern.search(prompt):
                 matches.append(f"regex:{pattern.pattern[:50]}")
         
-        # DEBUG
-        print(f"\nDEBUG jailbreak: prompt='{prompt}'")
-        normalized = self.fuzzy_matcher.normalize_text(prompt)
-        print(f"DEBUG normalized: '{normalized}'")
-        print(f"DEBUG fuzzy_jailbreak patterns: {self.fuzzy_jailbreak}")
+        normalized = self._normalize_text(prompt)
         
         # Fuzzy matching for obfuscated jailbreaks
         fuzzy_detected, fuzzy_matches = self.fuzzy_matcher.fuzzy_match(
             prompt, self.fuzzy_jailbreak
         )
-        print(f"DEBUG fuzzy result: detected={fuzzy_detected}, matches={fuzzy_matches}")
+
         
         if fuzzy_detected:
             matches.append(f"fuzzy:{','.join(fuzzy_matches)}")

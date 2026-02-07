@@ -311,7 +311,7 @@ if __name__ == "__main__":
     # Initialize LLM analyzer
     print("\n🚀 Starting Sentinel Guard...")
     if initialize_llm_analyzer():
-        print("✓ LLM Meta-Analysis enabled (Claude Haiku)")
+        print("✓ LLM Meta-Analysis enabled (Google Gemini 2.0 Flash)")
     else:
         print("⚠ LLM Meta-Analysis disabled (API key not found or invalid)")
     

@@ -9,15 +9,14 @@ MAX_CONVERSATION_HISTORY = 10  # Track last 10 prompts per user
 CONFIDENCE_THRESHOLD_BLOCK = 0.8  # Block if confidence >= 0.8
 CONFIDENCE_THRESHOLD_SANITIZE = 0.5  # Sanitize if 0.5 <= confidence < 0.8
 
-# Attack pattern weights (used for confidence scoring)
-# These weights determine the severity of each attack type
-# Higher weights (closer to 1.0) = more likely to BLOCK
+# Pattern weights for confidence scoring
+# Lowered to allow LLM meta-analysis for ambiguous cases (0.5-0.8 range)
 PATTERN_WEIGHTS = {
-    "system_override": 0.9,      # CRITICAL: Should always BLOCK
-    "role_manipulation": 0.85,   # HIGH: Usually BLOCK
-    "privilege_escalation": 0.75, # MEDIUM-HIGH: Often SANITIZE
-    "data_extraction": 0.7,       # MEDIUM: Often SANITIZE
-    "jailbreak": 0.95,            # CRITICAL: Should always BLOCK
+    "system_override": 0.65,      # Lowered from 0.90 - ambiguous prompts trigger LLM
+    "role_manipulation": 0.60,    # Lowered from 0.85 - questions about system trigger LLM
+    "privilege_escalation": 0.75,
+    "data_extraction": 0.70,
+    "jailbreak": 0.95             # Keep high - clear attacks should block immediately
 }
 
 # Attack patterns

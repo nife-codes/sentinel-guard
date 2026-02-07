@@ -305,10 +305,10 @@ class AttackDetector:
         # Average of max weight and mean weight
         base_confidence = (max_weight + (total_weight / count)) / 2 if count > 0 else 0.0
         
-        # Boost confidence if temporal patterns detected
+        # Boost confidence if temporal patterns detected (reduced to keep in LLM range)
         temporal_boost = 0.0
         if temporal_analysis and temporal_analysis.get("has_temporal_attack"):
-            temporal_boost = 0.15 * len(temporal_analysis.get("temporal_flags", []))
+            temporal_boost = 0.10 * len(temporal_analysis.get("temporal_flags", []))  # Reduced from 0.15
         
         initial_confidence = min(base_confidence + temporal_boost, 1.0)
         

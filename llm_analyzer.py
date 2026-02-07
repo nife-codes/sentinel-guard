@@ -1,32 +1,31 @@
 """
 LLM Meta-Analysis Module
-Uses Claude Haiku to analyze ambiguous prompts and provide explainable reasoning
+Uses OpenAI GPT-4o-mini to analyze ambiguous prompts and provide explainable reasoning
 """
 
 import os
 from typing import Optional, Dict, List
-from anthropic import Anthropic
-import anthropic
+from openai import OpenAI
 
 
 class LLMAnalyzer:
-    """Claude Haiku-powered meta-analysis for ambiguous attack detection"""
+    """OpenAI GPT-4o-mini-powered meta-analysis for ambiguous attack detection"""
     
     def __init__(self, api_key: Optional[str] = None):
         """
-        Initialize Claude API client
+        Initialize OpenAI API client
         
         Args:
-            api_key: Anthropic API key (defaults to ANTHROPIC_API_KEY env var)
+            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
         """
-        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
-            raise ValueError("ANTHROPIC_API_KEY not found in environment or constructor")
+            raise ValueError("OPENAI_API_KEY not found in environment or constructor")
         
-        self.client = Anthropic(api_key=self.api_key)
-        self.model = "claude-haiku-4-20250514"
+        self.client = OpenAI(api_key=self.api_key)
+        self.model = "gpt-4o-mini"  # Fast and cost-effective like Claude Haiku
         self.max_tokens = 500
-        self.timeout = 5.0  # 5 second timeout
+        self.timeout = 10.0  # 10 second timeout
     
     def analyze_ambiguous_prompt(
         self, 
@@ -34,7 +33,7 @@ class LLMAnalyzer:
         conversation_history: Optional[List[Dict[str, str]]] = None
     ) -> Optional[Dict[str, any]]:
         """
-        Analyze an ambiguous prompt using Claude Haiku
+        Analyze an ambiguous prompt using OpenAI GPT-4o-mini
         
         Args:
             current_prompt: The current prompt to analyze
@@ -82,34 +81,28 @@ CURRENT PROMPT: "{current_prompt}"{history_context}
 
 Is this an attack attempt? Provide your analysis."""
 
-            # Call Claude Haiku API
-            message = self.client.messages.create(
+            # Call OpenAI API
+            response = self.client.chat.completions.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 timeout=self.timeout,
-                system=system_prompt,
                 messages=[
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ]
             )
             
             # Parse response
-            response_text = message.content[0].text
+            response_text = response.choices[0].message.content
             return self._parse_llm_response(response_text)
         
-        except anthropic.APITimeoutError:
-            print(f"LLM Analysis timeout after {self.timeout}s")
-            return None
-        except anthropic.APIError as e:
-            print(f"LLM Analysis API error: {e}")
-            return None
         except Exception as e:
-            print(f"LLM Analysis unexpected error: {e}")
+            print(f"LLM Analysis error: {e}")
             return None
     
     def _parse_llm_response(self, response_text: str) -> Dict[str, any]:
         """
-        Parse Claude's response into structured format
+        Parse OpenAI's response into structured format
         
         Expected format:
         VERDICT: ATTACK or SAFE
@@ -179,7 +172,7 @@ def initialize_llm_analyzer(api_key: Optional[str] = None) -> bool:
     global llm_analyzer
     try:
         llm_analyzer = LLMAnalyzer(api_key=api_key)
-        print("✓ LLM Analyzer initialized successfully")
+        print("✓ LLM Analyzer initialized successfully (OpenAI GPT-4o-mini)")
         return True
     except Exception as e:
         print(f"✗ Failed to initialize LLM Analyzer: {e}")

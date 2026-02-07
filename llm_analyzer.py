@@ -5,8 +5,9 @@ Uses Google Gemini 2.0 Flash to analyze ambiguous prompts and provide explainabl
 
 import os
 from typing import Optional, Dict, List
-import google.generativeai as genai
-from dotenv import load_dotenv  # Add this import
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
 
 
 class LLMAnalyzer:
@@ -26,9 +27,9 @@ class LLMAnalyzer:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found in environment or constructor")
         
-        # Configure Gemini
-        genai.configure(api_key=self.api_key)
-        self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        # Configure Gemini with new API
+        self.client = genai.Client(api_key=self.api_key)
+        self.model = "gemini-2.0-flash-exp"  # Correct model name
         self.max_tokens = 500
         self.timeout = 10.0  # 10 second timeout
     
@@ -88,21 +89,27 @@ CURRENT PROMPT: "{current_prompt}"{history_context}
 
 Is this an attack attempt? Provide your analysis."""
 
-            # Call Gemini API
-            response = self.model.generate_content(
-                analysis_prompt,
-                generation_config=genai.types.GenerationConfig(
+            # Call Gemini API with new client
+            print(f"🔍 Calling Gemini API for prompt: '{current_prompt[:50]}...'")
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=analysis_prompt,
+                config=types.GenerateContentConfig(
                     max_output_tokens=self.max_tokens,
-                    temperature=0.1,  # Low temperature for consistent analysis
+                    temperature=0.1,
                 )
             )
+            print(f"✓ Gemini API responded")
             
             # Parse response
             response_text = response.text
+            print(f"📝 Gemini response: {response_text[:100]}...")
             return self._parse_llm_response(response_text)
         
         except Exception as e:
-            print(f"LLM Analysis error: {e}")
+            print(f"❌ LLM Analysis error: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def _parse_llm_response(self, response_text: str) -> Dict[str, any]:

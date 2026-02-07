@@ -311,15 +311,10 @@ async def clear_user_history(user_id: str):
 
 
 if __name__ == "__main__":
-    # Load environment variables
     load_dotenv()
     
-    # Initialize LLM analyzer
     print("\n🚀 Starting Sentinel Guard...")
-    if initialize_llm_analyzer():
-        print("✓ LLM Meta-Analysis enabled (Google Gemini 2.0 Flash)")
-    else:
-        print("⚠ LLM Meta-Analysis disabled (API key not found or invalid)")
+    print("⚠ LLM Meta-Analysis disabled (using pattern-based detection)")
     
     print("\n🌐 Starting API server on http://0.0.0.0:8000\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Sentinel Guard - AI Prompt Firewall Demo',
-  description: 'Interactive demo comparing unprotected LLM access vs Sentinel Guard prompt filtering with real-time audit logging.',
+  title: 'Sentinel Guard - AI Prompt Firewall',
+  description: 'Real-time LLM security dashboard. Detect and block prompt injection, jailbreaks, and malicious attacks before they reach your AI models.',
 }
 
 export const viewport: Viewport = {

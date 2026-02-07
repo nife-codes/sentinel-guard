@@ -51,6 +51,7 @@ class DecisionResponse(BaseModel):
     temporal_flags: List[str]
     log_id: int
     llm_reasoning: Optional[str] = None  # LLM meta-analysis reasoning
+    timestamp: str  # ISO format timestamp
 
 
 class HistoryResponse(BaseModel):
@@ -233,7 +234,8 @@ async def analyze_prompt(request: PromptRequest):
             flags=detection_results["attacks_detected"]
         )
         
-        # 8. Return response (includes LLM reasoning)
+        # 8. Return response (includes LLM reasoning and timestamp)
+        from datetime import datetime
         return DecisionResponse(
             decision=decision_result["decision"],
             confidence=decision_result["confidence"],
@@ -242,7 +244,8 @@ async def analyze_prompt(request: PromptRequest):
             attacks_detected=decision_result["attacks_detected"],
             temporal_flags=decision_result["temporal_flags"],
             log_id=log_id,
-            llm_reasoning=decision_result.get("llm_reasoning")
+            llm_reasoning=decision_result.get("llm_reasoning"),
+            timestamp=datetime.now().isoformat()
         )
     
     except Exception as e:

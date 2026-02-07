@@ -117,7 +117,7 @@ class AttackDetector:
             if pattern.search(prompt):
                 matches.append(f"regex:{pattern.pattern[:50]}")
         
-        normalized = self._normalize_text(prompt)
+        normalized = self.fuzzy_matcher.normalize_text(prompt)
         
         # Fuzzy matching
         fuzzy_detected, fuzzy_matches = self.fuzzy_matcher.fuzzy_match(
@@ -139,7 +139,7 @@ class AttackDetector:
             if pattern.search(prompt):
                 matches.append(f"regex:{pattern.pattern[:50]}")
         
-        normalized = self._normalize_text(prompt)
+        normalized = self.fuzzy_matcher.normalize_text(prompt)
         
         # Fuzzy matching
         fuzzy_detected, fuzzy_matches = self.fuzzy_matcher.fuzzy_match(
@@ -185,7 +185,7 @@ class AttackDetector:
             if pattern.search(prompt):
                 matches.append(f"regex:{pattern.pattern[:50]}")
         
-        normalized = self._normalize_text(prompt)
+        normalized = self.fuzzy_matcher.normalize_text(prompt)
         
         # Fuzzy matching for obfuscated jailbreaks
         fuzzy_detected, fuzzy_matches = self.fuzzy_matcher.fuzzy_match(

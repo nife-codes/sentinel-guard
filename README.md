@@ -2,6 +2,12 @@
 
 **AI Prompt Firewall for LLM Applications**
 
+## Demo Video
+
+Watch the full Sentinel Guard demo here:  
+**🔗 [Live Demo](https://youtu.be/nhS9r4pTipw)**
+
+
 Sentinel Guard is a production-ready Web Application Firewall (WAF) designed specifically for Large Language Model applications. It provides real-time detection and mitigation of prompt injection attacks, jailbreak attempts, and other adversarial inputs that target AI systems.
 
 ## What It Does
@@ -244,4 +250,4 @@ Contributions welcome. Please open an issue before submitting major changes.
 
 ## Acknowledgments
 
-Built for the Google AI Hackathon 2024. Designed to address the critical security gap in LLM application deployment.
+Built for the DERIV AI TALENT SPRINT 2026. Designed to address the critical security gap in LLM application deployment.

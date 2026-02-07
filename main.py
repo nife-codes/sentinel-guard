@@ -5,6 +5,7 @@ FastAPI application for intercepting and analyzing LLM prompts
 
 from fastapi import FastAPI, HTTPException, Request  # type: ignore
 from fastapi.responses import JSONResponse  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware  # type: ignore
 from pydantic import BaseModel  # type: ignore
 from typing import Optional, List
 import uvicorn  # type: ignore
@@ -22,6 +23,15 @@ app = FastAPI(
     title="Sentinel Guard",
     description="LLM Behavior Control Plane - Temporal Attack Detection & Explainable Decisions",
     version="1.0.0"
+)
+
+# Configure CORS to allow frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

@@ -27,25 +27,27 @@ export default function Page() {
     allowed: auditLog.filter((e) => e.decision === "ALLOW").length,
   }
 
-  const handleSubmit = useCallback((prompt: string) => {
+  const handleSubmit = useCallback(async (prompt: string) => {
     setIsLoading(true)
     setCurrentPrompt(prompt)
     setVulnerableResult(null)
     setSentinelResult(null)
 
-    // Simulate network delay for the vulnerable side
-    setTimeout(() => {
-      const vulnResponse = simulateVulnerableResponse(prompt)
-      setVulnerableResult(vulnResponse)
+    // Simulate vulnerable response (for demo purposes)
+    const vulnResponse = simulateVulnerableResponse(prompt)
+    setVulnerableResult(vulnResponse)
 
-      // Sentinel Guard processes slightly after
-      setTimeout(() => {
-        const analysis = analyzePrompt(prompt)
-        setSentinelResult(analysis)
-        setAuditLog((prev) => [analysis, ...prev])
-        setIsLoading(false)
-      }, 400)
-    }, 600)
+    // Call real Sentinel Guard backend
+    try {
+      const analysis = await analyzePrompt(prompt)
+      setSentinelResult(analysis)
+      setAuditLog((prev) => [analysis, ...prev])
+    } catch (error) {
+      console.error('Error analyzing prompt:', error)
+      // Error state is already handled in analyzePrompt function
+    } finally {
+      setIsLoading(false)
+    }
   }, [])
 
   return (

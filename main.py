@@ -13,6 +13,9 @@ from detector import attack_detector  # type: ignore
 from state import conversation_state  # type: ignore
 from logger import audit_logger  # type: ignore
 import config  # type: ignore
+from llm_analyzer import initialize_llm_analyzer  # type: ignore
+import os
+from dotenv import load_dotenv  # type: ignore
 
 
 app = FastAPI(
@@ -37,6 +40,7 @@ class DecisionResponse(BaseModel):
     attacks_detected: List[str]
     temporal_flags: List[str]
     log_id: int
+    llm_reasoning: Optional[str] = None  # LLM meta-analysis reasoning
 
 
 class HistoryResponse(BaseModel):
@@ -53,15 +57,26 @@ class DecisionEngine:
                      temporal_analysis: dict, confidence: float) -> dict:
         """
         Make a decision: ALLOW, SANITIZE, or BLOCK
-        Returns decision with explainable reasoning
+        Returns decision with explainable reasoning (including LLM meta-analysis)
         """
         reasons = []
         decision = "ALLOW"
         sanitized_prompt = None
+        llm_reasoning = None
         
         # Collect all detected attacks
         attacks = detection_results.get("attacks_detected", [])
         temporal_flags = temporal_analysis.get("temporal_flags", [])
+        
+        # Check for LLM meta-analysis
+        llm_meta = detection_results.get("llm_meta_analysis")
+        if llm_meta and llm_meta.get("was_analyzed"):
+            llm_reasoning = llm_meta.get("reasoning")
+            # Add LLM reasoning to reasons list
+            if llm_meta.get("is_attack"):
+                reasons.append(f"🤖 LLM Analysis: {llm_reasoning}")
+            else:
+                reasons.append(f"🤖 LLM Analysis (Safe): {llm_reasoning}")
         
         # Build reasoning
         if attacks:
@@ -110,7 +125,8 @@ class DecisionEngine:
             "reasons": reasons,
             "sanitized_prompt": sanitized_prompt,
             "attacks_detected": attacks,
-            "temporal_flags": temporal_flags
+            "temporal_flags": temporal_flags,
+            "llm_reasoning": llm_reasoning
         }
     
     @staticmethod
@@ -149,19 +165,30 @@ async def analyze_prompt(request: PromptRequest):
     Main endpoint: Analyze a prompt and return decision
     """
     try:
-        # 1. Detect attack patterns in current prompt
-        detection_results = attack_detector.analyze_prompt(request.prompt)
+        # 1. Get conversation history for LLM context
+        history = conversation_state.get_history(request.user_id, limit=3)
+        history_dicts = [
+            {"prompt": record.prompt, "decision": record.decision}
+            for record in history
+        ]
         
-        # 2. Analyze temporal patterns from conversation history
-        temporal_analysis = conversation_state.analyze_temporal_patterns(request.user_id)
-        
-        # 3. Calculate confidence score
-        confidence = attack_detector.calculate_confidence(
-            detection_results, 
-            temporal_analysis
+        # 2. Detect attack patterns in current prompt
+        detection_results = attack_detector.analyze_prompt(
+            request.prompt,
+            conversation_history=history_dicts
         )
         
-        # 4. Make decision
+        # 3. Analyze temporal patterns from conversation history
+        temporal_analysis = conversation_state.analyze_temporal_patterns(request.user_id)
+        
+        # 4. Calculate confidence score (may trigger LLM meta-analysis)
+        confidence = attack_detector.calculate_confidence(
+            detection_results, 
+            temporal_analysis,
+            conversation_history=history_dicts
+        )
+        
+        # 5. Make decision (includes LLM reasoning if available)
         decision_result = decision_engine.make_decision(
             request.prompt,
             detection_results,
@@ -169,7 +196,7 @@ async def analyze_prompt(request: PromptRequest):
             confidence
         )
         
-        # 5. Log to audit trail
+        # 6. Log to audit trail
         log_id = audit_logger.log_decision(
             user_id=request.user_id,
             prompt=request.prompt,
@@ -181,7 +208,7 @@ async def analyze_prompt(request: PromptRequest):
             sanitized_prompt=decision_result["sanitized_prompt"]
         )
         
-        # 6. Update conversation state
+        # 7. Update conversation state
         conversation_state.add_prompt(
             user_id=request.user_id,
             prompt=request.prompt,
@@ -190,7 +217,7 @@ async def analyze_prompt(request: PromptRequest):
             flags=detection_results["attacks_detected"]
         )
         
-        # 7. Return response
+        # 8. Return response (includes LLM reasoning)
         return DecisionResponse(
             decision=decision_result["decision"],
             confidence=decision_result["confidence"],
@@ -198,7 +225,8 @@ async def analyze_prompt(request: PromptRequest):
             sanitized_prompt=decision_result["sanitized_prompt"],
             attacks_detected=decision_result["attacks_detected"],
             temporal_flags=decision_result["temporal_flags"],
-            log_id=log_id
+            log_id=log_id,
+            llm_reasoning=decision_result.get("llm_reasoning")
         )
     
     except Exception as e:
@@ -277,4 +305,15 @@ async def clear_user_history(user_id: str):
 
 
 if __name__ == "__main__":
+    # Load environment variables
+    load_dotenv()
+    
+    # Initialize LLM analyzer
+    print("\n🚀 Starting Sentinel Guard...")
+    if initialize_llm_analyzer():
+        print("✓ LLM Meta-Analysis enabled (Claude Haiku)")
+    else:
+        print("⚠ LLM Meta-Analysis disabled (API key not found or invalid)")
+    
+    print("\n🌐 Starting API server on http://0.0.0.0:8000\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -3,8 +3,9 @@ Attack pattern detection engine with fuzzy matching
 """
 
 import re
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 import config
+from llm_analyzer import get_llm_analyzer
 
 
 class FuzzyMatcher:
@@ -207,16 +208,22 @@ class AttackDetector:
         
         return len(matches) > 0, matches
     
-    def analyze_prompt(self, prompt: str) -> Dict[str, any]:
+    def analyze_prompt(self, prompt: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, any]:
         """
-        Comprehensive prompt analysis with fuzzy matching
+        Comprehensive prompt analysis with fuzzy matching and optional LLM meta-analysis
+        
+        Args:
+            prompt: The prompt to analyze
+            conversation_history: Optional conversation history for LLM context
+        
         Returns detection results for all attack patterns
         """
         results = {
             "prompt": prompt,
             "attacks_detected": [],
             "details": {},
-            "overall_threat": False
+            "overall_threat": False,
+            "llm_meta_analysis": None  # Will be populated for ambiguous cases
         }
         
         # Run all detectors
@@ -268,9 +275,17 @@ class AttackDetector:
         return results
     
     def calculate_confidence(self, detection_results: Dict[str, any], 
-                            temporal_analysis: Dict[str, any] = None) -> float:
+                            temporal_analysis: Dict[str, any] = None,
+                            conversation_history: Optional[List[Dict]] = None) -> float:
         """
         Calculate confidence score based on detected patterns and temporal analysis
+        For ambiguous cases (0.5-0.8), calls LLM for meta-analysis
+        
+        Args:
+            detection_results: Results from analyze_prompt
+            temporal_analysis: Optional temporal pattern analysis
+            conversation_history: Optional conversation history for LLM
+        
         Returns: float between 0 and 1
         """
         if not detection_results["overall_threat"]:
@@ -295,8 +310,40 @@ class AttackDetector:
         if temporal_analysis and temporal_analysis.get("has_temporal_attack"):
             temporal_boost = 0.15 * len(temporal_analysis.get("temporal_flags", []))
         
-        final_confidence = min(base_confidence + temporal_boost, 1.0)
-        return round(final_confidence, 2)
+        initial_confidence = min(base_confidence + temporal_boost, 1.0)
+        
+        # LLM Meta-Analysis for ambiguous cases (0.5 <= confidence < 0.8)
+        if 0.5 <= initial_confidence < 0.8:
+            llm_analyzer = get_llm_analyzer()
+            if llm_analyzer:
+                print(f"\n🤖 LLM Meta-Analysis triggered (confidence: {initial_confidence:.2f})")
+                llm_result = llm_analyzer.analyze_ambiguous_prompt(
+                    current_prompt=detection_results["prompt"],
+                    conversation_history=conversation_history
+                )
+                
+                if llm_result:
+                    # Store LLM analysis in detection results
+                    detection_results["llm_meta_analysis"] = {
+                        "was_analyzed": True,
+                        "is_attack": llm_result["is_attack"],
+                        "confidence": llm_result["confidence"],
+                        "reasoning": llm_result["reasoning"]
+                    }
+                    
+                    # Adjust confidence based on LLM analysis
+                    if llm_result["is_attack"]:
+                        # LLM confirms attack - boost confidence
+                        final_confidence = max(initial_confidence, llm_result["confidence"])
+                        print(f"✓ LLM confirms attack (LLM confidence: {llm_result['confidence']:.2f})")
+                    else:
+                        # LLM says safe - reduce confidence
+                        final_confidence = min(initial_confidence, llm_result["confidence"])
+                        print(f"✓ LLM says safe (LLM confidence: {llm_result['confidence']:.2f})")
+                    
+                    return round(final_confidence, 2)
+        
+        return round(initial_confidence, 2)
 
 
 # Global detector instance

@@ -29,7 +29,7 @@ class LLMAnalyzer:
         
         # Configure Gemini with new API
         self.client = genai.Client(api_key=self.api_key)
-        self.model = "gemini-2.0-flash-exp"  # Correct model name
+        self.model = "gemini-1.5-flash"  # Stable model
         self.max_tokens = 500
         self.timeout = 10.0  # 10 second timeout
     
